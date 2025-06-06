@@ -145,7 +145,9 @@
             let y = e.clientY - rect.top;
             let dx = x - ball.x;
             let dy = y - ball.y;
-            if (dx * dx + dy * dy <= ball.r * ball.r) {
+            let clickableRadius = ball.r + 15; // 15px larger than the ball's radius
+if (dx * dx + dy * dy <= clickableRadius * clickableRadius) {
+
                 ball.vy = -10; // bounce up
             }
         }
