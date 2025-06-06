@@ -11,15 +11,20 @@
             margin: 0;
             padding: 0;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
         }
         .game-container {
-            max-width: 500px;
+            max-width: 700px;
             margin: 40px auto 0 auto;
             background: #f8fafc;
             border-radius: 16px;
             box-shadow: 0 2px 16px rgba(30,60,120,0.11);
             padding: 32px 24px 24px 24px;
             text-align: center;
+            position: relative;
         }
         h1 {
             color: #1a4e8a;
@@ -31,6 +36,8 @@
             border-radius: 12px;
             display: block;
             margin: 0 auto 18px auto;
+            width: 600px;
+            height: 500px;
         }
         .score {
             font-size: 1.2em;
@@ -57,62 +64,160 @@
             color: #555;
             margin-bottom: 16px;
         }
+        .arms {
+            position: absolute;
+            bottom: 60px;
+            left: 50px;
+            width: 150px;
+            height: 200px;
+            pointer-events: none;
+        }
+        .arm {
+            position: absolute;
+            width: 60px;
+            height: 150px;
+            background: #f1c27d;
+            border-radius: 30px 30px 10px 10px;
+            box-shadow: inset -5px 0 10px rgba(0,0,0,0.1);
+            transform-origin: top center;
+        }
+        .arm.left {
+            left: 0;
+            top: 20px;
+            transform: rotate(30deg);
+            box-shadow: inset 5px 0 10px rgba(0,0,0,0.1);
+        }
+        .arm.right {
+            right: 0;
+            top: 20px;
+            transform: rotate(-30deg);
+        }
+        .net {
+            position: absolute;
+            bottom: 0;
+            right: 50px;
+            width: 20px;
+            height: 200px;
+            background: repeating-linear-gradient(
+                to bottom,
+                #1a4e8a,
+                #1a4e8a 4px,
+                #f8fafc 4px,
+                #f8fafc 8px
+            );
+            border: 2px solid #1a4e8a;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
     <div class="game-container">
         <h1>Volleyball Mini-Game</h1>
-        <div class="instructions">
+        <div class="instructions" id="instructions">
+            Click the <strong>Start Game</strong> button to begin.<br>
             Click or tap the volleyball to keep it in the air!<br>
             Try for a high score. Refresh to play again.
         </div>
         <div class="score" id="score">Score: 0</div>
-        <canvas id="volleyballGame" width="400" height="400"></canvas>
-        <a href="Luke_Bradbury_Resume.html" class="btn">Back to Résumé</a>
+        <canvas id="volleyballGame" width="600" height="500"></canvas>
+        <button id="startButton" class="btn">Start Game</button>
+        <a href="Luke_Bradbury_Resume.html" class="btn" style="margin-left: 12px;">Back to Résumé</a>
+        <div class="arms">
+            <div class="arm left"></div>
+            <div class="arm right"></div>
+        </div>
+        <div class="net"></div>
     </div>
+
     <script>
         const canvas = document.getElementById('volleyballGame');
         const ctx = canvas.getContext('2d');
-        let ball = { x: 200, y: 200, r: 30, vx: 2, vy: 2, gravity: 0.35 };
-        let score = 0;
-        let gameActive = true;
+        const startButton = document.getElementById('startButton');
+        const scoreDisplay = document.getElementById('score');
+        const instructions = document.getElementById('instructions');
 
-        function drawCourt() {
-            // Draw net
+        let ball = { x: 300, y: 250, r: 30, vx: 0, vy: 0, gravity: 0.3 };
+        let score = 0;
+        let gameActive = false;
+
+        function drawNet() {
+            // Draw court floor
             ctx.fillStyle = "#b7c6e0";
-            ctx.fillRect(0, 350, 400, 8);
+            ctx.fillRect(0, 480, 600, 20);
             // Draw court lines
             ctx.strokeStyle = "#1a4e8a";
             ctx.lineWidth = 2;
-            ctx.strokeRect(20, 360, 360, 20);
+            ctx.strokeRect(20, 480, 560, 20);
         }
 
         function drawBall() {
-            // Volleyball look
+            // Draw red, white, and blue volleyball
+            const cx = ball.x;
+            const cy = ball.y;
+            const r = ball.r;
+
+            // Outer circle
             ctx.beginPath();
-            ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
-            ctx.fillStyle = "#f5f8fa";
-            ctx.shadowColor = "#b7c6e0";
-            ctx.shadowBlur = 8;
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff';
             ctx.fill();
-            ctx.shadowBlur = 0;
-            ctx.strokeStyle = "#1a4e8a";
             ctx.lineWidth = 3;
+            ctx.strokeStyle = '#000';
             ctx.stroke();
-            // Simple lines for volleyball
-            ctx.strokeStyle = "#b7c6e0";
-            ctx.lineWidth = 2;
+
+            // Red panels
+            ctx.fillStyle = '#d32f2f';
             ctx.beginPath();
-            ctx.arc(ball.x, ball.y, ball.r * 0.9, Math.PI * 0.25, Math.PI * 1.25);
+            ctx.moveTo(cx - r * 0.7, cy - r * 0.7);
+            ctx.lineTo(cx - r * 0.2, cy - r * 0.2);
+            ctx.lineTo(cx - r * 0.2, cy + r * 0.2);
+            ctx.lineTo(cx - r * 0.7, cy + r * 0.7);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(cx + r * 0.7, cy - r * 0.7);
+            ctx.lineTo(cx + r * 0.2, cy - r * 0.2);
+            ctx.lineTo(cx + r * 0.2, cy + r * 0.2);
+            ctx.lineTo(cx + r * 0.7, cy + r * 0.7);
+            ctx.closePath();
+            ctx.fill();
+
+            // Blue panels
+            ctx.fillStyle = '#1976d2';
+            ctx.beginPath();
+            ctx.moveTo(cx - r * 0.2, cy - r * 0.7);
+            ctx.lineTo(cx + r * 0.2, cy - r * 0.7);
+            ctx.lineTo(cx + r * 0.7, cy - r * 0.2);
+            ctx.lineTo(cx - r * 0.7, cy - r * 0.2);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(cx - r * 0.2, cy + r * 0.7);
+            ctx.lineTo(cx + r * 0.2, cy + r * 0.7);
+            ctx.lineTo(cx + r * 0.7, cy + r * 0.2);
+            ctx.lineTo(cx - r * 0.7, cy + r * 0.2);
+            ctx.closePath();
+            ctx.fill();
+
+            // White stripes
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(cx - r * 0.7, cy);
+            ctx.lineTo(cx + r * 0.7, cy);
             ctx.stroke();
+
             ctx.beginPath();
-            ctx.arc(ball.x, ball.y, ball.r * 0.7, Math.PI * 1.2, Math.PI * 2.1);
+            ctx.moveTo(cx, cy - r * 0.7);
+            ctx.lineTo(cx, cy + r * 0.7);
             ctx.stroke();
         }
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawCourt();
+            drawNet();
             drawBall();
         }
 
@@ -123,9 +228,9 @@
             ball.vy += ball.gravity;
 
             // Bounce off walls
-            if (ball.x - ball.r < 0 || ball.x + ball.r > 400) {
+            if (ball.x - ball.r < 0 || ball.x + ball.r > canvas.width) {
                 ball.vx *= -1;
-                ball.x = Math.max(ball.r, Math.min(ball.x, 400 - ball.r));
+                ball.x = Math.max(ball.r, Math.min(ball.x, canvas.width - ball.r));
             }
 
             // Bounce off ceiling
@@ -135,44 +240,7 @@
             }
 
             // Hit ground (game over)
-            if (ball.y + ball.r > 370) {
-                ball.y = 370 - ball.r;
+            if (ball.y + ball.r > 480) {
+                ball.y = 480 - ball.r;
                 gameActive = false;
-                document.getElementById('score').textContent = `Game Over! Final Score: ${score}`;
-            }
-        }
-
-        function animate() {
-            draw();
-            update();
-            if (gameActive) requestAnimationFrame(animate);
-        }
-
-        canvas.addEventListener('mousedown', handleTap);
-        canvas.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            handleTap(e.touches[0]);
-        });
-
-        function handleTap(e) {
-            if (!gameActive) return;
-            // Get click/tap coordinates
-            let rect = canvas.getBoundingClientRect();
-            let x = (e.clientX || e.pageX) - rect.left;
-            let y = (e.clientY || e.pageY) - rect.top;
-            // Distance from ball center
-            let dx = x - ball.x;
-            let dy = y - ball.y;
-            if (dx * dx + dy * dy <= ball.r * ball.r) {
-                // "Hit" the ball: send it up, random left/right
-                ball.vy = -8 - Math.random() * 2;
-                ball.vx = (Math.random() - 0.5) * 8;
-                score++;
-                document.getElementById('score').textContent = `Score: ${score}`;
-            }
-        }
-
-        animate();
-    </script>
-</body>
-</html>
+                instructions.textContent = 'Game Over! Final Score: ' + score + '. Click Start Game to play again.';
