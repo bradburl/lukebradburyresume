@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Volleyball Mini-Game</title>
+    <style>
+        body {
+            background: linear-gradient(120deg, #e3eafc 0%, #c9d6e3 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #23395d;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .game-container {
+            max-width: 500px;
+            margin: 40px auto 0 auto;
+            background: #f8fafc;
+            border-radius: 16px;
+            box-shadow: 0 2px 16px rgba(30,60,120,0.11);
+            padding: 32px 24px 24px 24px;
+            text-align: center;
+        }
+        h1 {
+            color: #1a4e8a;
+            margin-bottom: 8px;
+        }
+        canvas {
+            background: #eaf0f8;
+            border: 3px solid #1a4e8a;
+            border-radius: 12px;
+            display: block;
+            margin: 0 auto 18px auto;
+        }
+        .score {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        .btn {
+            display: inline-block;
+            margin-top: 18px;
+            padding: 10px 26px;
+            background: #1a4e8a;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1em;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #23395d;
+        }
+        .instructions {
+            font-size: 0.95em;
+            color: #555;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Volleyball Mini-Game</h1>
+        <div class="instructions">
+            Click or tap the volleyball to keep it in the air!<br>
+            Try for a high score. Refresh to play again.
+        </div>
+        <div class="score" id="score">Score: 0</div>
+        <canvas id="volleyballGame" width="400" height="400"></canvas>
+        <a href="Luke_Bradbury_Resume.html" class="btn">Back to Résumé</a>
+    </div>
+    <script>
+        const canvas = document.getElementById('volleyballGame');
+        const ctx = canvas.getContext('2d');
+        let ball = { x: 200, y: 200, r: 30, vx: 2, vy: 2, gravity: 0.35 };
+        let score = 0;
+        let gameActive = true;
+
+        function drawCourt() {
+            // Draw net
+            ctx.fillStyle = "#b7c6e0";
+            ctx.fillRect(0, 350, 400, 8);
+            // Draw court lines
+            ctx.strokeStyle = "#1a4e8a";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(20, 360, 360, 20);
+        }
+
+        function drawBall() {
+            // Volleyball look
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+            ctx.fillStyle = "#f5f8fa";
+            ctx.shadowColor = "#b7c6e0";
+            ctx.shadowBlur = 8;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = "#1a4e8a";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            // Simple lines for volleyball
+            ctx.strokeStyle = "#b7c6e0";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.r * 0.9, Math.PI * 0.25, Math.PI * 1.25);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.r * 0.7, Math.PI * 1.2, Math.PI * 2.1);
+            ctx.stroke();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawCourt();
+            drawBall();
+        }
+
+        function update() {
+            if (!gameActive) return;
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+            ball.vy += ball.gravity;
+
+            // Bounce off walls
+            if (ball.x - ball.r < 0 || ball.x + ball.r > 400) {
+                ball.vx *= -1;
+                ball.x = Math.max(ball.r, Math.min(ball.x, 400 - ball.r));
+            }
+
+            // Bounce off ceiling
+            if (ball.y - ball.r < 0) {
+                ball.vy *= -1;
+                ball.y = ball.r;
+            }
+
+            // Hit ground (game over)
+            if (ball.y + ball.r > 370) {
+                ball.y = 370 - ball.r;
+                gameActive = false;
+                document.getElementById('score').textContent = `Game Over! Final Score: ${score}`;
+            }
+        }
+
+        function animate() {
+            draw();
+            update();
+            if (gameActive) requestAnimationFrame(animate);
+        }
+
+        canvas.addEventListener('mousedown', handleTap);
+        canvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            handleTap(e.touches[0]);
+        });
+
+        function handleTap(e) {
+            if (!gameActive) return;
+            // Get click/tap coordinates
+            let rect = canvas.getBoundingClientRect();
+            let x = (e.clientX || e.pageX) - rect.left;
+            let y = (e.clientY || e.pageY) - rect.top;
+            // Distance from ball center
+            let dx = x - ball.x;
+            let dy = y - ball.y;
+            if (dx * dx + dy * dy <= ball.r * ball.r) {
+                // "Hit" the ball: send it up, random left/right
+                ball.vy = -8 - Math.random() * 2;
+                ball.vx = (Math.random() - 0.5) * 8;
+                score++;
+                document.getElementById('score').textContent = `Score: ${score}`;
+            }
+        }
+
+        animate();
+    </script>
+</body>
+</html>
