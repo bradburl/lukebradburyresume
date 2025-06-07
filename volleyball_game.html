@@ -70,19 +70,17 @@
     <div class="game-container">
         <h1>Volleyball Mini-Game</h1>
         <div class="instructions" id="instructions">
-            Click the <strong>Start Game</strong> button to begin.<br>
+            Click the volleyball to start and keep it bouncing!<br>
             Bounce the volleyball up and down by clicking the ball.<br>
             Try for a high score. Refresh to play again.
         </div>
         <div class="score" id="score">Score: 0</div>
         <canvas id="volleyballGame" width="600" height="500"></canvas>
-        <button id="startButton" class="btn">Start Game</button>
-        <a href="Luke_Bradbury_Resume.html" class="btn" style="margin-left: 12px;">Back to Volleyball Page</a>
+        <a href="Luke_Bradbury_Resume.html" class="btn" style="margin-left: 12px;">Back to Résumé</a>
     </div>
     <script>
         const canvas = document.getElementById('volleyballGame');
         const ctx = canvas.getContext('2d');
-        const startButton = document.getElementById('startButton');
         const scoreDisplay = document.getElementById('score');
         const instructions = document.getElementById('instructions');
 
@@ -116,8 +114,7 @@
             if (ball.y + ball.r > canvas.height) {
                 ball.y = canvas.height - ball.r;
                 gameActive = false;
-                instructions.textContent = 'Game Over! Final Score: ' + score + '. Click Start Game to play again.';
-                startButton.style.display = 'inline-block';
+                instructions.textContent = 'Game Over! Final Score: ' + score + '. Click the ball to play again.';
             }
         }
 
@@ -134,25 +131,25 @@
             gameActive = true;
             scoreDisplay.textContent = 'Score: 0';
             instructions.textContent = 'Bounce the volleyball up and down by clicking the ball!';
-            startButton.style.display = 'none';
             animate();
         }
 
         function handleClick(e) {
-            if (!gameActive) return;
             let rect = canvas.getBoundingClientRect();
             let x = e.clientX - rect.left;
             let y = e.clientY - rect.top;
             let dx = x - ball.x;
             let dy = y - ball.y;
-            let clickableRadius = ball.r + 15; // 15px larger than the ball's radius
-if (dx * dx + dy * dy <= clickableRadius * clickableRadius) {
-
-                ball.vy = -10; // bounce up
+            let clickableRadius = ball.r * 2; // clickable radius doubled
+            if (dx * dx + dy * dy <= clickableRadius * clickableRadius) {
+                if (!gameActive) {
+                    startGame();
+                } else {
+                    ball.vy = -10; // bounce up
+                }
             }
         }
 
-        startButton.addEventListener('click', startGame);
         canvas.addEventListener('click', handleClick);
 
         // Draw initial ball image when loaded
